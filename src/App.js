@@ -259,7 +259,7 @@ export default function ExpenseSplitter() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-white tracking-tight">SplitEasy</h1>
-                <p className="text-purple-200">Split expenses, stay friends</p>
+                <p className="text-purple-200">Split expenses, stay friends!</p>
               </div>
             </div>
             <button
