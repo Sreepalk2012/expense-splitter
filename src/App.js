@@ -36,7 +36,7 @@ export default function ExpenseSplitter() {
     };
     
     initializeGroup();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Generate unique group ID
   const generateGroupId = () => {
