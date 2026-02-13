@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Users, DollarSign, TrendingUp, Share2, Save, X, UserPlus, Receipt } from 'lucide-react';
+import { Plus, Trash2, Users, DollarSign, TrendingUp, Share2, X, UserPlus, Receipt } from 'lucide-react';
 
 export default function ExpenseSplitter() {
   const [people, setPeople] = useState(['Alex', 'Jordan']);
@@ -13,39 +13,37 @@ export default function ExpenseSplitter() {
   });
   const [groupId, setGroupId] = useState('');
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showPeopleModal, setShowPeopleModal] = useState(false);
 
   useEffect(() => {
-    const initializeGroup = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlGroupId = urlParams.get('group');
-      
-      if (urlGroupId) {
-        setGroupId(urlGroupId);
-        await loadGroupData(urlGroupId);
-      } else {
-        const newGroupId = generateGroupId();
-        setGroupId(newGroupId);
-        await saveGroupData(newGroupId, people, []);
-      }
-      setLoading(false);
-    };
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlGroupId = urlParams.get('group');
     
-    initializeGroup();
+    if (urlGroupId) {
+      setGroupId(urlGroupId);
+      loadGroupData(urlGroupId);
+    } else {
+      const newGroupId = generateGroupId();
+      setGroupId(newGroupId);
+      const storedData = localStorage.getItem(`expenses_${newGroupId}`);
+      if (!storedData) {
+        saveGroupData(newGroupId, people, []);
+      }
+    }
+    setLoading(false);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateGroupId = () => {
     return 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   };
 
-  const loadGroupData = async (id) => {
+  const loadGroupData = (id) => {
     try {
-      const result = await window.storage.get(`expenses_${id}`, true);
-      if (result && result.value) {
-        const data = JSON.parse(result.value);
+      const stored = localStorage.getItem(`expenses_${id}`);
+      if (stored) {
+        const data = JSON.parse(stored);
         setPeople(data.people || ['Alex', 'Jordan']);
         setExpenses(data.expenses || []);
         setExpenseForm({
@@ -60,22 +58,19 @@ export default function ExpenseSplitter() {
     }
   };
 
-  const saveGroupData = async (id, peopleList, expensesList) => {
-    setSaving(true);
+  const saveGroupData = (id, peopleList, expensesList) => {
     try {
-      await window.storage.set(
+      localStorage.setItem(
         `expenses_${id}`,
         JSON.stringify({
           people: peopleList,
           expenses: expensesList,
           lastUpdated: new Date().toISOString()
-        }),
-        true
+        })
       );
     } catch (error) {
       console.error('Save failed:', error);
     }
-    setSaving(false);
   };
 
   useEffect(() => {
@@ -92,7 +87,7 @@ export default function ExpenseSplitter() {
   const copyShareLink = () => {
     const link = getShareableLink();
     navigator.clipboard.writeText(link);
-    alert('Link copied! Share it with your group.');
+    alert('Link copied! Note: Each person will have their own copy of the data in their browser.');
   };
 
   const addPerson = () => {
@@ -275,13 +270,6 @@ export default function ExpenseSplitter() {
               Share Group
             </button>
           </div>
-          
-          {saving && (
-            <div className="glass px-4 py-2 rounded-lg inline-flex items-center gap-2 text-purple-200">
-              <Save className="w-4 h-4 animate-pulse" />
-              Syncing...
-            </div>
-          )}
         </div>
       </div>
 
@@ -578,7 +566,7 @@ export default function ExpenseSplitter() {
               </button>
             </div>
             <p className="text-purple-200 mb-4">
-              Anyone with this link can view and add expenses to this group.
+              Share this link with your group. Note: Data is stored locally in each person's browser.
             </p>
             <div className="bg-white/10 p-4 rounded-xl mb-4 break-all text-sm text-purple-100 border border-white/20">
               {getShareableLink()}
